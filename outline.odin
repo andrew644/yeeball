@@ -16,12 +16,12 @@ Point :: struct {
 	y: i32,
 }
 
-getWorldOutline :: proc(world: World, startX, startY: i32) -> [dynamic]Point {
+getWorldOutline :: proc(world: ^World, startX, startY: i32) -> [dynamic]Point {
 	// find left side
 	x := startX
 	y := startY
 	for x >= 0 {
-		index := world_index(world, x, y)
+		index := worldIndex(world, x, y)
 		if world.filled[index] == WorldState.WALL {
 			break
 		}
@@ -64,15 +64,15 @@ inPoints :: proc(points: [dynamic]Point, x, y: i32) -> bool {
 }
 
 @(private="file")
-up :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
+up :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 	x := startX
 	y := startY
 
 	y -= 1 //move once since we know we aren't at the edge yet
 
 	for {
-		right := world_index(world, x + 1, y)
-		up := world_index(world, x, y - 1) 
+		right := worldIndex(world, x + 1, y)
+		up := worldIndex(world, x, y - 1) 
 
 		if world.filled[up] == WorldState.WALL {
 			if world.filled[right] == WorldState.EMPTY {
@@ -91,15 +91,15 @@ up :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
 }
 
 @(private="file")
-left :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
+left :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 	x := startX
 	y := startY
 
 	x -= 1 //move once since we know we aren't at the edge yet
 
 	for {
-		left := world_index(world, x - 1, y)
-		up := world_index(world, x, y - 1) 
+		left := worldIndex(world, x - 1, y)
+		up := worldIndex(world, x, y - 1) 
 
 		if world.filled[left] == WorldState.WALL {
 			if world.filled[up] == WorldState.EMPTY {
@@ -118,15 +118,15 @@ left :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
 }
 
 @(private="file")
-down :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
+down :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 	x := startX
 	y := startY
 
 	y += 1 //move once since we know we aren't at the edge yet
 
 	for {
-		down := world_index(world, x, y + 1)
-		left := world_index(world, x - 1, y) 
+		down := worldIndex(world, x, y + 1)
+		left := worldIndex(world, x - 1, y) 
 
 		if world.filled[down] == WorldState.WALL {
 			if world.filled[left] == WorldState.EMPTY {
@@ -145,15 +145,15 @@ down :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
 }
 
 @(private="file")
-right :: proc(world: World, startX, startY: i32) -> (i32, i32, Direction) {
+right :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 	x := startX
 	y := startY
 
 	x += 1 //move once since we know we aren't at the edge yet
 
 	for {
-		right := world_index(world, x + 1, y)
-		down := world_index(world, x, y + 1) 
+		right := worldIndex(world, x + 1, y)
+		down := worldIndex(world, x, y + 1) 
 
 		if world.filled[right] == WorldState.WALL {
 			if world.filled[down] == WorldState.EMPTY {

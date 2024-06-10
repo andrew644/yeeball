@@ -89,15 +89,11 @@ init_world :: proc(world: ^World) {
 	}
 }
 
-world_index :: proc(world: World, x, y: i32) -> i32 {
-	return y * world.width + x
-}
-
 worldIndex :: proc(world: ^World, x, y: i32) -> i32 {
 	return y * world.width + x
 }
 
-drawWorld :: proc(game: Game, world: World) {
+drawWorld :: proc(game: Game, world: ^World) {
 	points := getWorldOutline(world, 100, 100)
 	rl.BeginDrawing()
 	{
@@ -173,7 +169,7 @@ main :: proc() {
 		delta := rl.GetFrameTime()
 
 		updateWorld(game, world, delta)
-		drawWorld(game, world)
+		drawWorld(game, &world)
 	}
 
 	rl.CloseWindow()
