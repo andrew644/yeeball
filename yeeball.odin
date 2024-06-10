@@ -26,8 +26,12 @@ Game :: struct {
 
 	ballRadius: i32,
 
-	tick_rate: time.Duration,
-	last_tick: time.Time,
+	blueUsed: bool,
+	redUsed: bool,
+
+	ballSpeed: f32,
+	extenderSpeed: f32,
+	extenderSize: i32,
 }
 
 WorldState :: enum u8 {
@@ -43,11 +47,21 @@ World :: struct {
 	border:  i32,
 	filled:  []WorldState,
 	balls:  [dynamic]Ball,
+	blueExtender: Extender,
+	redExtender: Extender,
 }
 
 Ball :: struct {
 	position: rl.Vector2,
 	velocity: rl.Vector2,
+}
+
+Extender :: struct {
+	x: i32,
+	y: i32,
+	length: f32,
+	horizontal: bool,
+	active: bool,
 }
 
 set_mouse :: proc(game: Game) {
@@ -113,14 +127,77 @@ drawWorld :: proc(game: Game, world: ^World) {
 		for ball in world.balls {
 			rl.DrawCircleLines(game.leftOffset + c.int(ball.position.x), game.topOffset + c.int(ball.position.y), f32(game.ballRadius), rl.GREEN)
 		}
+
+		if world.blueExtender.active {
+			if world.blueExtender.horizontal == false {
+				rl.DrawRectangleLines(world.blueExtender.x, world.blueExtender.y, game.extenderSize, i32(world.blueExtender.length), rl.BLUE)
+			} else {
+				rl.DrawRectangleLines(world.blueExtender.x, world.blueExtender.y, i32(world.blueExtender.length), game.extenderSize, rl.BLUE)
+			}
+		}
+		if world.redExtender.active {
+			length := i32(world.redExtender.length)
+			if world.redExtender.horizontal == false {
+				rl.DrawRectangleLines(world.redExtender.x, world.redExtender.y - length, game.extenderSize, length, rl.RED)
+			} else {
+				rl.DrawRectangleLines(world.redExtender.x - length, world.redExtender.y, length, game.extenderSize, rl.RED)
+			}
+		}
 	}
 	rl.EndDrawing()
 }
 
-updateWorld :: proc(game: Game, world: World, delta: f32) {
+updateWorld :: proc(game: Game, world: ^World, delta: f32) {
 	for i := 0; i < len(world.balls); i += 1 {
-		world.balls[i].position.x += world.balls[i].velocity.x * delta * 100
-		world.balls[i].position.y += world.balls[i].velocity.y * delta * 100
+		world.balls[i].position.x += world.balls[i].velocity.x * delta * game.ballSpeed
+		world.balls[i].position.y += world.balls[i].velocity.y * delta * game.ballSpeed
+		ballWallCollision(game, world, &world.balls[i])
+	}
+
+	updateExtenders(game, world, delta)
+}
+
+updateExtenders :: proc(game: Game, world: ^World, delta: f32) {
+	if world.blueExtender.active {
+		world.blueExtender.length += delta * game.extenderSpeed
+	}
+	if world.redExtender.active {
+		world.redExtender.length += delta * game.extenderSpeed
+	}
+}
+
+ballWallCollision :: proc(game: Game, world: ^World, ball: ^Ball) {
+	x := i32(ball.position.x)
+	y := i32(ball.position.y)
+	if world.filled[worldIndex(world, x + game.ballRadius + 1, y)] == WorldState.WALL {
+		ball.velocity.x = -ball.velocity.x
+	} 
+	if world.filled[worldIndex(world, x, y + game.ballRadius + 1)] == WorldState.WALL {
+		ball.velocity.y = -ball.velocity.y
+	} 
+	if world.filled[worldIndex(world, x - game.ballRadius - 1, y)] == WorldState.WALL {
+		ball.velocity.x = -ball.velocity.x
+	} 
+	if world.filled[worldIndex(world, x, y - game.ballRadius - 1)] == WorldState.WALL {
+		ball.velocity.y = -ball.velocity.y
+	} 
+}
+
+click :: proc(game: Game, world: ^World, x, y: i32) {
+	if world.blueExtender.active == false {
+		world.blueExtender.x = x
+		world.blueExtender.y = y
+		world.blueExtender.active = true
+		world.blueExtender.length = 16
+		world.blueExtender.horizontal = game.horizontal
+	}
+
+	if world.redExtender.active == false {
+		world.redExtender.x = x
+		world.redExtender.y = y
+		world.redExtender.active = true
+		world.redExtender.length = 16
+		world.redExtender.horizontal = game.horizontal
 	}
 }
 
@@ -134,9 +211,11 @@ main :: proc() {
 		topOffset = 100,
 		leftOffset = 100,
 		ballRadius = 8,
-
-		tick_rate = 10 * time.Millisecond,
-		last_tick = time.now(),
+		blueUsed = false,
+		redUsed = false,
+		ballSpeed = 100,
+		extenderSpeed = 100,
+		extenderSize = 16,
 	}
 
 	world := World {
@@ -144,7 +223,15 @@ main :: proc() {
 		height = game.height,
 		border = 16,
 		filled = make([]WorldState, game.width * game.height),
-		balls = make([dynamic]Ball, 0, 16)
+		balls = make([dynamic]Ball, 0, 16),
+		blueExtender = Extender {
+			length = 0,
+			active = false,
+		},
+		redExtender = Extender {
+			length = 0,
+			active = false,
+		}
 	}
 	defer delete(world.filled)
 	defer delete(world.balls)
@@ -166,9 +253,14 @@ main :: proc() {
 			set_mouse(game)
 		}
 
+		if left_mouse_clicked {
+			mousePos := rl.GetMousePosition()
+			click(game, &world, i32(mousePos.x) + game.leftOffset, i32(mousePos.y) + game.topOffset)
+		}
+
 		delta := rl.GetFrameTime()
 
-		updateWorld(game, world, delta)
+		updateWorld(game, &world, delta)
 		drawWorld(game, &world)
 	}
 
