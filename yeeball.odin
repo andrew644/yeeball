@@ -32,6 +32,9 @@ Game :: struct {
 	ballSpeed: f32,
 	extenderSpeed: f32,
 	extenderSize: i32,
+
+	lives: i32,
+	level: i32,
 }
 
 WorldState :: enum u8 {
@@ -107,146 +110,6 @@ worldIndex :: proc(world: ^World, x, y: i32) -> i32 {
 	return y * world.width + x
 }
 
-drawOutline :: proc(game: Game, points: [dynamic]Point) {
-	if len(points) >= 3 {
-		for i := 0; i < len(points) - 1; i += 1 {
-			rl.DrawLine(game.leftOffset + points[i].x, game.topOffset + points[i].y, game.leftOffset + points[i + 1].x, game.topOffset + points[i + 1].y, rl.WHITE)
-		}
-
-		//draw from last point to first point
-		endIndex := len(points) - 1
-		rl.DrawLine(game.leftOffset + points[endIndex].x, game.topOffset + points[endIndex].y, game.leftOffset + points[0].x, game.topOffset + points[0].y, rl.WHITE)
-	}
-}
-
-drawWorld :: proc(game: Game, world: ^World) {
-	rl.BeginDrawing()
-	{
-		rl.ClearBackground(rl.BLACK)
-		rl.DrawFPS(5, 5)
-		
-		for ball in world.balls {
-			rl.DrawCircleLines(game.leftOffset + c.int(ball.position.x), game.topOffset + c.int(ball.position.y), f32(game.ballRadius), rl.GREEN)
-			points := getWorldOutline(world, i32(ball.position.x), i32(ball.position.y))
-			drawOutline(game, points)
-			defer delete(points)
-		}
-
-		if world.blueExtender.active {
-			x := world.blueExtender.x + game.leftOffset
-			y := world.blueExtender.y + game.topOffset
-			if world.blueExtender.horizontal{
-				rl.DrawRectangleLines(x, y, i32(world.blueExtender.length), game.extenderSize, rl.BLUE)
-			} else {
-				rl.DrawRectangleLines(x, y, game.extenderSize, i32(world.blueExtender.length), rl.BLUE)
-			}
-		}
-		if world.redExtender.active {
-			x := world.redExtender.x + game.leftOffset
-			y := world.redExtender.y + game.topOffset
-			length := i32(world.redExtender.length)
-			if world.redExtender.horizontal {
-				rl.DrawRectangleLines(x - length, y, length, game.extenderSize, rl.RED)
-			} else {
-				rl.DrawRectangleLines(x, y - length, game.extenderSize, length, rl.RED)
-			}
-		}
-	}
-	rl.EndDrawing()
-}
-
-updateWorld :: proc(game: Game, world: ^World, delta: f32) {
-	for i := 0; i < len(world.balls); i += 1 {
-		world.balls[i].position.x += world.balls[i].velocity.x * delta * game.ballSpeed
-		world.balls[i].position.y += world.balls[i].velocity.y * delta * game.ballSpeed
-		ballWallCollision(game, world, &world.balls[i])
-	}
-
-	updateExtenders(game, world, delta)
-	extenderWallCollision(game, world)
-}
-
-updateExtenders :: proc(game: Game, world: ^World, delta: f32) {
-	if world.blueExtender.active {
-		world.blueExtender.length += delta * game.extenderSpeed
-	}
-	if world.redExtender.active {
-		world.redExtender.length += delta * game.extenderSpeed
-	}
-}
-
-ballWallCollision :: proc(game: Game, world: ^World, ball: ^Ball) {
-	x := i32(ball.position.x)
-	y := i32(ball.position.y)
-	if world.filled[worldIndex(world, x + game.ballRadius + 1, y)] == WorldState.WALL {
-		ball.velocity.x = -ball.velocity.x
-	} 
-	if world.filled[worldIndex(world, x, y + game.ballRadius + 1)] == WorldState.WALL {
-		ball.velocity.y = -ball.velocity.y
-	} 
-	if world.filled[worldIndex(world, x - game.ballRadius - 1, y)] == WorldState.WALL {
-		ball.velocity.x = -ball.velocity.x
-	} 
-	if world.filled[worldIndex(world, x, y - game.ballRadius - 1)] == WorldState.WALL {
-		ball.velocity.y = -ball.velocity.y
-	} 
-}
-
-extenderWallCollision :: proc(game: Game, world: ^World) {
-	if world.blueExtender.active {
-		x := world.blueExtender.x
-		y := world.blueExtender.y
-		length := i32(world.blueExtender.length)
-		height := game.extenderSize
-		if world.blueExtender.horizontal {
-			indexTop := worldIndex(world, x + length, y)
-			indexBottom := worldIndex(world, x + length, y + height)
-			if world.filled[indexTop] == WorldState.WALL || world.filled[indexBottom] == WorldState.WALL {
-				world.blueExtender.active = false				
-				convertToWall(game, world, x, y, length, height)
-			}
-		} else {
-			indexLeft := worldIndex(world, x, y + length)
-			indexRight := worldIndex(world, x + height, y + length)
-			if world.filled[indexLeft] == WorldState.WALL || world.filled[indexRight] == WorldState.WALL {
-				world.blueExtender.active = false				
-				convertToWall(game, world, x, y, height, length)
-			}
-		}
-	}
-
-	if world.redExtender.active {
-		x := world.redExtender.x
-		y := world.redExtender.y
-		length := i32(world.redExtender.length)
-		height := game.extenderSize
-		if world.redExtender.horizontal {
-			indexTop := worldIndex(world, x - length, y)
-			indexBottom := worldIndex(world, x - length, y + height)
-			if world.filled[indexTop] == WorldState.WALL || world.filled[indexBottom] == WorldState.WALL {
-				world.redExtender.active = false				
-				convertToWall(game, world, x - length, y, length, height)
-			}
-		} else {
-			indexLeft := worldIndex(world, x, y - length)
-			indexRight := worldIndex(world, x + height, y - length)
-			if world.filled[indexLeft] == WorldState.WALL || world.filled[indexRight] == WorldState.WALL {
-				world.redExtender.active = false				
-				convertToWall(game, world, x, y - length, height, length)
-			}
-		}
-	}
-}
-
-convertToWall :: proc(game: Game, world: ^World, xStart, yStart, width, height: i32) {
-	for x: i32 = 0; x < width; x += 1 {
-		for y: i32 = 0; y < height; y += 1 {
-			index := worldIndex(world, xStart + x, yStart + y)
-			world.filled[index] = WorldState.WALL
-		}
-	}
-}
-
 click :: proc(game: Game, world: ^World, x, y: i32) {
 	if world.blueExtender.active == false {
 		world.blueExtender.x = x
@@ -280,6 +143,8 @@ main :: proc() {
 		ballSpeed = 200,
 		extenderSpeed = 300,
 		extenderSize = 16,
+		lives = 2,
+		level = 1,
 	}
 
 	world := World {
