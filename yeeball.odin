@@ -37,21 +37,18 @@ Game :: struct {
 	level: i32,
 }
 
-WorldState :: enum u8 {
-	EMPTY,
-	WALL,
-	EXPANDING_R,
-	EXPANDING_B,
-}
+EMPTY : byte : 0
+WALL : byte : 1
 
 World :: struct {
 	width:  i32,
 	height: i32,
 	border:  i32,
-	filled:  []WorldState,
+	filled:  []byte,
 	balls:  [dynamic]Ball,
 	blueExtender: Extender,
 	redExtender: Extender,
+	fillPercent: i32,
 }
 
 Ball :: struct {
@@ -84,24 +81,24 @@ init_world :: proc(world: ^World) {
 	for y: i32 = 0; y < world.border; y += 1 {
 		for x: i32 = 0; x < world.width; x += 1 {
 			index := worldIndex(world, x, y)
-			world.filled[index] = WorldState.WALL
+			world.filled[index] = WALL
 		}
 	}
 	for y: i32 = world.height - world.border; y < world.height; y += 1 {
 		for x: i32 = 0; x < world.width; x += 1 {
 			index := worldIndex(world, x, y)
-			world.filled[index] = WorldState.WALL
+			world.filled[index] = WALL
 		}
 	}
 
 	for y: i32 = 0; y < world.height; y += 1 {
 		for x: i32 = 0; x < world.border; x += 1 {
 			index := worldIndex(world, x, y)
-			world.filled[index] = WorldState.WALL
+			world.filled[index] = WALL
 		}
 		for x: i32 = world.width - world.border; x < world.width; x += 1 {
 			index := worldIndex(world, x, y)
-			world.filled[index] = WorldState.WALL
+			world.filled[index] = WALL
 		}
 	}
 }
@@ -151,7 +148,7 @@ main :: proc() {
 		width = game.width,
 		height = game.height,
 		border = 16,
-		filled = make([]WorldState, game.width * game.height),
+		filled = make([]byte, game.width * game.height),
 		balls = make([dynamic]Ball, 0, 16),
 		blueExtender = Extender {
 			length = 0,
@@ -160,7 +157,8 @@ main :: proc() {
 		redExtender = Extender {
 			length = 0,
 			active = false,
-		}
+		},
+		fillPercent = 0,
 	}
 	defer delete(world.filled)
 	defer delete(world.balls)

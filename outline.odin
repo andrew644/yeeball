@@ -22,7 +22,7 @@ getWorldOutline :: proc(world: ^World, startX, startY: i32) -> [dynamic]Point {
 	y := startY
 	for x >= 0 {
 		index := worldIndex(world, x, y)
-		if world.filled[index] == WorldState.WALL {
+		if world.filled[index] == WALL {
 			break
 		}
 		x -= 1
@@ -74,17 +74,17 @@ up :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 		right := worldIndex(world, x + 1, y)
 		up := worldIndex(world, x, y - 1) 
 
-		if world.filled[up] == WorldState.WALL {
-			if world.filled[right] == WorldState.EMPTY {
+		if world.filled[up] == WALL {
+			if world.filled[right] == EMPTY {
 				y -= 1
 				continue
 			}
-			if world.filled[right] == WorldState.WALL {
+			if world.filled[right] == WALL {
 				return x, y, Direction.RIGHT
 			}
 		}
 
-		if world.filled[up] == WorldState.EMPTY && world.filled[right] == WorldState.EMPTY {
+		if world.filled[up] == EMPTY && world.filled[right] == EMPTY {
 			return x, y, Direction.LEFT
 		}
 	}
@@ -101,17 +101,17 @@ left :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 		left := worldIndex(world, x - 1, y)
 		up := worldIndex(world, x, y - 1) 
 
-		if world.filled[left] == WorldState.WALL {
-			if world.filled[up] == WorldState.EMPTY {
+		if world.filled[left] == WALL {
+			if world.filled[up] == EMPTY {
 				x -= 1
 				continue
 			}
-			if world.filled[up] == WorldState.WALL {
+			if world.filled[up] == WALL {
 				return x, y, Direction.UP
 			}
 		}
 
-		if world.filled[left] == WorldState.EMPTY && world.filled[up] == WorldState.EMPTY {
+		if world.filled[left] == EMPTY && world.filled[up] == EMPTY {
 			return x, y, Direction.DOWN
 		}
 	}
@@ -128,17 +128,17 @@ down :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 		down := worldIndex(world, x, y + 1)
 		left := worldIndex(world, x - 1, y) 
 
-		if world.filled[down] == WorldState.WALL {
-			if world.filled[left] == WorldState.EMPTY {
+		if world.filled[down] == WALL {
+			if world.filled[left] == EMPTY {
 				y += 1
 				continue
 			}
-			if world.filled[left] == WorldState.WALL {
+			if world.filled[left] == WALL {
 				return x, y, Direction.LEFT
 			}
 		}
 
-		if world.filled[down] == WorldState.EMPTY && world.filled[left] == WorldState.EMPTY {
+		if world.filled[down] == EMPTY && world.filled[left] == EMPTY {
 			return x, y, Direction.RIGHT
 		}
 	}
@@ -155,17 +155,17 @@ right :: proc(world: ^World, startX, startY: i32) -> (i32, i32, Direction) {
 		right := worldIndex(world, x + 1, y)
 		down := worldIndex(world, x, y + 1) 
 
-		if world.filled[right] == WorldState.WALL {
-			if world.filled[down] == WorldState.EMPTY {
+		if world.filled[right] == WALL {
+			if world.filled[down] == EMPTY {
 				x += 1
 				continue
 			}
-			if world.filled[down] == WorldState.WALL {
+			if world.filled[down] == WALL {
 				return x, y, Direction.DOWN
 			}
 		}
 
-		if world.filled[right] == WorldState.EMPTY && world.filled[down] == WorldState.EMPTY {
+		if world.filled[right] == EMPTY && world.filled[down] == EMPTY {
 			return x, y, Direction.UP
 		}
 	}
