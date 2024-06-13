@@ -8,16 +8,16 @@ ballWallCollision :: proc(game: ^Game, world: ^World, ball: ^Ball) {
 	x := i32(ball.position.x)
 	y := i32(ball.position.y)
 	if world.filled[worldIndex(world, x + game.ballRadius + 1, y)] == WALL {
-		ball.velocity.x = -ball.velocity.x
+		ball.velocity.x = -1
 	} 
 	if world.filled[worldIndex(world, x, y + game.ballRadius + 1)] == WALL {
-		ball.velocity.y = -ball.velocity.y
+		ball.velocity.y = -1
 	} 
 	if world.filled[worldIndex(world, x - game.ballRadius - 1, y)] == WALL {
-		ball.velocity.x = -ball.velocity.x
+		ball.velocity.x = 1
 	} 
 	if world.filled[worldIndex(world, x, y - game.ballRadius - 1)] == WALL {
-		ball.velocity.y = -ball.velocity.y
+		ball.velocity.y = 1
 	} 
 }
 
@@ -66,6 +66,16 @@ ballExtenderCollision :: proc(game: ^Game, world: ^World, ball: ^Ball) {
 ballExtenderCollisionTrue :: proc(game: ^Game, world: ^World, extender: ^Extender) {
 	extender.active = false
 	game.lives -= 1
+
+	checkGameOver(game, world)
+}
+
+checkGameOver :: proc(game: ^Game, world: ^World) {
+	if game.lives <= 0 {
+		game.level = 1
+		game.lives = 2
+		initWorld(game, world)
+	}
 }
 
 circleRectCollision :: proc(circle: rl.Vector2, radius: i32, rectX, rectY, width, height: i32) -> bool {

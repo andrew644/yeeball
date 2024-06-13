@@ -25,6 +25,9 @@ updateExtenders :: proc(game: ^Game, world: ^World, delta: f32) {
 }
 
 advanceLevel :: proc(game: ^Game, world: ^World) {
+	game.level += 1
+	game.lives += 1
+	initWorld(game, world)
 }
 
 convertToWall :: proc(game: ^Game, world: ^World, xStart, yStart, width, height: i32) {
@@ -35,15 +38,14 @@ convertToWall :: proc(game: ^Game, world: ^World, xStart, yStart, width, height:
 		}
 	}
 	fillInGaps(game, world)
-	world.fillPercent = i32(percentFilled(game, world) * 100)
-	if world.fillPercent > game.fillGoal {
+	updateFilledPercent(game, world)
+	if world.fillPercent >= game.fillGoal {
 		advanceLevel(game, world)
 	}
 }
 
-nextLevel ::proc(game: ^Game, world: ^World) {
-	game.lives += 1
-	game.level += 1
+updateFilledPercent :: proc(game: ^Game, world: ^World) {
+	world.fillPercent = i32(percentFilled(game, world) * 100)
 }
 
 percentFilled :: proc(game: ^Game, world: ^World) -> f32 {

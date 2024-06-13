@@ -22,7 +22,16 @@ drawPercentFilled :: proc(game: ^Game, world: ^World) {
 	buffer: [20]byte
 	text: string = strconv.itoa(buffer[:], int(world.fillPercent))
 	textc: cstring = strings.clone_to_cstring(text)
-	rl.DrawText(textc, 5, 5, 32, rl.YELLOW)
+	rl.DrawText(textc, 10, 10, 32, rl.GREEN)
+	delete(textc)
+}
+
+drawLives :: proc(game: ^Game, world: ^World) {
+	buffer: [20]byte
+	text: string = strconv.itoa(buffer[:], int(game.lives))
+	textc: cstring = strings.clone_to_cstring(text)
+	rl.DrawText("Lives: ", 800, 10, 32, rl.GREEN)
+	rl.DrawText(textc, 900, 10, 32, rl.GREEN)
 	delete(textc)
 }
 
@@ -30,8 +39,9 @@ drawWorld :: proc(game: ^Game, world: ^World) {
 	rl.BeginDrawing()
 	{
 		rl.ClearBackground(rl.BLACK)
-		rl.DrawFPS(5, 5)
+		rl.DrawFPS(5, 650)
 		drawPercentFilled(game, world)
+		drawLives(game, world)
 		
 		for ball in world.balls {
 			rl.DrawCircleLines(game.leftOffset + c.int(ball.position.x), game.topOffset + c.int(ball.position.y), f32(game.ballRadius), rl.GREEN)

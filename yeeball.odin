@@ -6,7 +6,7 @@ import time "core:time"
 import rl "vendor:raylib"
 import "core:c"
 import "core:fmt"
-
+import "core:math/rand"
 
 Window :: struct {
 	name:          cstring,
@@ -66,7 +66,7 @@ Extender :: struct {
 	active: bool,
 }
 
-set_mouse :: proc(game: ^Game) {
+setMouse :: proc(game: ^Game) {
 	if game.horizontal {
 		rl.SetMouseCursor(rl.MouseCursor.RESIZE_EW)
 	} else {
@@ -74,10 +74,38 @@ set_mouse :: proc(game: ^Game) {
 	}
 }
 
-init_world :: proc(world: ^World) {
-	//Add ball
-	append(&world.balls, Ball{position = rl.Vector2{200, 200},velocity = rl.Vector2{1, 1}})
-	append(&world.balls, Ball{position = rl.Vector2{100, 100},velocity = rl.Vector2{-1, 1}})
+randomRange :: proc(lower, upper: u32) -> u32 {
+	r := rand.uint32()
+	return (r % (upper - lower + 1)) + lower
+}
+
+randomDirection :: proc() -> rl.Vector2 {
+	r1 := rand.int31()
+	r2 := rand.int31()
+
+	return rl.Vector2{f32((r1 % 2) * 2 - 1), f32((r2 % 2) * 2 - 1)}
+}
+
+initWorld :: proc(game: ^Game, world: ^World) {
+	//Clear world
+	for i := 0; i < len(world.filled); i += 1 {
+		world.filled[i] = EMPTY
+	}
+	
+	world.redExtender.active = false
+	world.blueExtender.active = false
+
+	clear_dynamic_array(&world.balls)
+
+	//Add balls
+	rand.set_global_seed(2)
+	for len(world.balls) < int(game.level + 1) {
+		x := randomRange(u32(world.border + 16), u32(game.width - world.border - 16))
+		y := randomRange(u32(world.border + 16), u32(game.height - world.border - 16))
+		direction := randomDirection()
+
+		append(&world.balls, Ball{position = rl.Vector2{f32(x), f32(y)}, velocity = direction})
+	}
 
 	//Add border
 	for y: i32 = 0; y < world.border; y += 1 {
@@ -103,6 +131,8 @@ init_world :: proc(world: ^World) {
 			world.filled[index] = WALL
 		}
 	}
+
+	updateFilledPercent(game, world)
 }
 
 worldIndex :: proc(world: ^World, x, y: i32) -> i32 {
@@ -128,7 +158,7 @@ click :: proc(game: ^Game, world: ^World, x, y: i32) {
 }
 
 main :: proc() {
-	window := Window{"Yeeball", 1024, 1024, 60, rl.ConfigFlags{.WINDOW_RESIZABLE}}
+	window := Window{"Yeeball", 1024, 800, 60, rl.ConfigFlags{.WINDOW_RESIZABLE}}
 
 	game := Game {
 		horizontal = true,
@@ -166,13 +196,13 @@ main :: proc() {
 	defer delete(world.filled)
 	defer delete(world.balls)
 
-	init_world(&world)
+	initWorld(&game, &world)
 
 	rl.InitWindow(window.width, window.height, window.name)
 	rl.SetWindowState(window.control_flags)
 	rl.SetTargetFPS(window.fps)
 
-	set_mouse(&game)
+	setMouse(&game)
 
 	for !rl.WindowShouldClose() {
 		left_mouse_clicked := rl.IsMouseButtonPressed(.LEFT)
@@ -180,7 +210,7 @@ main :: proc() {
 		
 		if right_mouse_clicked {
 			game.horizontal = !game.horizontal
-			set_mouse(&game)
+			setMouse(&game)
 		}
 
 		if left_mouse_clicked {
