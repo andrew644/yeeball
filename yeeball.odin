@@ -35,6 +35,8 @@ Game :: struct {
 
 	lives: i32,
 	level: i32,
+
+	fillGoal: i32,
 }
 
 EMPTY : byte : 0
@@ -64,7 +66,7 @@ Extender :: struct {
 	active: bool,
 }
 
-set_mouse :: proc(game: Game) {
+set_mouse :: proc(game: ^Game) {
 	if game.horizontal {
 		rl.SetMouseCursor(rl.MouseCursor.RESIZE_EW)
 	} else {
@@ -107,7 +109,7 @@ worldIndex :: proc(world: ^World, x, y: i32) -> i32 {
 	return y * world.width + x
 }
 
-click :: proc(game: Game, world: ^World, x, y: i32) {
+click :: proc(game: ^Game, world: ^World, x, y: i32) {
 	if world.blueExtender.active == false {
 		world.blueExtender.x = x
 		world.blueExtender.y = y
@@ -142,6 +144,7 @@ main :: proc() {
 		extenderSize = 16,
 		lives = 2,
 		level = 1,
+		fillGoal = 75,
 	}
 
 	world := World {
@@ -169,7 +172,7 @@ main :: proc() {
 	rl.SetWindowState(window.control_flags)
 	rl.SetTargetFPS(window.fps)
 
-	set_mouse(game)
+	set_mouse(&game)
 
 	for !rl.WindowShouldClose() {
 		left_mouse_clicked := rl.IsMouseButtonPressed(.LEFT)
@@ -177,18 +180,18 @@ main :: proc() {
 		
 		if right_mouse_clicked {
 			game.horizontal = !game.horizontal
-			set_mouse(game)
+			set_mouse(&game)
 		}
 
 		if left_mouse_clicked {
 			mousePos := rl.GetMousePosition()
-			click(game, &world, i32(mousePos.x) - game.leftOffset, i32(mousePos.y) - game.topOffset)
+			click(&game, &world, i32(mousePos.x) - game.leftOffset, i32(mousePos.y) - game.topOffset)
 		}
 
 		delta := rl.GetFrameTime()
 
-		updateWorld(game, &world, delta)
-		drawWorld(game, &world)
+		updateWorld(&game, &world, delta)
+		drawWorld(&game, &world)
 	}
 
 	rl.CloseWindow()

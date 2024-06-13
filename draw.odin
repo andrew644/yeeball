@@ -6,7 +6,7 @@ import "core:c"
 import "core:strconv"
 import "core:strings"
 
-drawOutline :: proc(game: Game, points: [dynamic]Point) {
+drawOutline :: proc(game: ^Game, points: [dynamic]Point) {
 	if len(points) >= 3 {
 		for i := 0; i < len(points) - 1; i += 1 {
 			rl.DrawLine(game.leftOffset + points[i].x, game.topOffset + points[i].y, game.leftOffset + points[i + 1].x, game.topOffset + points[i + 1].y, rl.WHITE)
@@ -18,7 +18,7 @@ drawOutline :: proc(game: Game, points: [dynamic]Point) {
 	}
 }
 
-drawPercentFilled :: proc(game: Game, world: ^World) {
+drawPercentFilled :: proc(game: ^Game, world: ^World) {
 	buffer: [20]byte
 	text: string = strconv.itoa(buffer[:], int(world.fillPercent))
 	textc: cstring = strings.clone_to_cstring(text)
@@ -26,7 +26,7 @@ drawPercentFilled :: proc(game: Game, world: ^World) {
 	delete(textc)
 }
 
-drawWorld :: proc(game: Game, world: ^World) {
+drawWorld :: proc(game: ^Game, world: ^World) {
 	rl.BeginDrawing()
 	{
 		rl.ClearBackground(rl.BLACK)
