@@ -6,7 +6,6 @@ import time "core:time"
 import rl "vendor:raylib"
 import "core:c"
 import "core:fmt"
-import "core:math/rand"
 
 Window :: struct {
 	name:          cstring,
@@ -64,97 +63,6 @@ Extender :: struct {
 	length: f32,
 	horizontal: bool,
 	active: bool,
-}
-
-setMouse :: proc(game: ^Game) {
-	if game.horizontal {
-		rl.SetMouseCursor(rl.MouseCursor.RESIZE_EW)
-	} else {
-		rl.SetMouseCursor(rl.MouseCursor.RESIZE_NS)
-	}
-}
-
-randomRange :: proc(lower, upper: u32) -> u32 {
-	r := rand.uint32()
-	return (r % (upper - lower + 1)) + lower
-}
-
-randomDirection :: proc() -> rl.Vector2 {
-	r1 := rand.int31()
-	r2 := rand.int31()
-
-	return rl.Vector2{f32((r1 % 2) * 2 - 1), f32((r2 % 2) * 2 - 1)}
-}
-
-initWorld :: proc(game: ^Game, world: ^World) {
-	//Clear world
-	for i := 0; i < len(world.filled); i += 1 {
-		world.filled[i] = EMPTY
-	}
-	
-	world.redExtender.active = false
-	world.blueExtender.active = false
-
-	clear_dynamic_array(&world.balls)
-
-	//Add balls
-	rand.set_global_seed(2)
-	for len(world.balls) < int(game.level + 1) {
-		x := randomRange(u32(world.border + 16), u32(game.width - world.border - 16))
-		y := randomRange(u32(world.border + 16), u32(game.height - world.border - 16))
-		direction := randomDirection()
-
-		append(&world.balls, Ball{position = rl.Vector2{f32(x), f32(y)}, velocity = direction})
-	}
-
-	//Add border
-	for y: i32 = 0; y < world.border; y += 1 {
-		for x: i32 = 0; x < world.width; x += 1 {
-			index := worldIndex(world, x, y)
-			world.filled[index] = WALL
-		}
-	}
-	for y: i32 = world.height - world.border; y < world.height; y += 1 {
-		for x: i32 = 0; x < world.width; x += 1 {
-			index := worldIndex(world, x, y)
-			world.filled[index] = WALL
-		}
-	}
-
-	for y: i32 = 0; y < world.height; y += 1 {
-		for x: i32 = 0; x < world.border; x += 1 {
-			index := worldIndex(world, x, y)
-			world.filled[index] = WALL
-		}
-		for x: i32 = world.width - world.border; x < world.width; x += 1 {
-			index := worldIndex(world, x, y)
-			world.filled[index] = WALL
-		}
-	}
-
-	updateFilledPercent(game, world)
-}
-
-worldIndex :: proc(world: ^World, x, y: i32) -> i32 {
-	return y * world.width + x
-}
-
-click :: proc(game: ^Game, world: ^World, x, y: i32) {
-	if world.blueExtender.active == false {
-		world.blueExtender.x = x
-		world.blueExtender.y = y
-		world.blueExtender.active = true
-		world.blueExtender.length = 16
-		world.blueExtender.horizontal = game.horizontal
-	}
-
-	if world.redExtender.active == false {
-		world.redExtender.x = x
-		world.redExtender.y = y
-		world.redExtender.active = true
-		world.redExtender.length = 16
-		world.redExtender.horizontal = game.horizontal
-	}
 }
 
 main :: proc() {
