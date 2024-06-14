@@ -19,27 +19,29 @@ drawOutline :: proc(game: ^Game, points: [dynamic]Point) {
 }
 
 drawPercentFilled :: proc(game: ^Game, world: ^World) {
-	buffer: [20]byte
-	text: string = strconv.itoa(buffer[:], int(world.fillPercent))
-	textc: cstring = strings.clone_to_cstring(text)
-	rl.DrawText(textc, 10, 10, 32, rl.GREEN)
-	delete(textc)
+	buffer: [4]byte
+	buffer[0] = '0'
+	buffer[1] = '0'
+	buffer[2] = '%'
+	buffer[3] = 0
+
+	strconv.itoa(buffer[:], int(world.fillPercent))
+	rl.DrawText(cstring(raw_data(buffer[:])), game.leftOffset + world.border, 32, 32, rl.GREEN)
 }
 
 drawLives :: proc(game: ^Game, world: ^World) {
 	buffer: [20]byte
-	text: string = strconv.itoa(buffer[:], int(game.lives))
-	textc: cstring = strings.clone_to_cstring(text)
-	rl.DrawText("Lives: ", 800, 10, 32, rl.GREEN)
-	rl.DrawText(textc, 900, 10, 32, rl.GREEN)
-	delete(textc)
+	buffer[19] = 0
+	strconv.itoa(buffer[:], int(game.lives))
+	rl.DrawText("Lives: ", 760, 32, 32, rl.GREEN)
+	rl.DrawText(cstring(raw_data(buffer[:])), 860, 32, 32, rl.GREEN)
 }
 
 drawWorld :: proc(game: ^Game, world: ^World) {
 	rl.BeginDrawing()
 	{
 		rl.ClearBackground(rl.BLACK)
-		rl.DrawFPS(5, 650)
+		//rl.DrawFPS(5, 650)
 		drawPercentFilled(game, world)
 		drawLives(game, world)
 		

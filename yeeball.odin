@@ -158,7 +158,7 @@ click :: proc(game: ^Game, world: ^World, x, y: i32) {
 }
 
 main :: proc() {
-	window := Window{"Yeeball", 1024, 800, 60, rl.ConfigFlags{.WINDOW_RESIZABLE}}
+	window := Window{"Yeeball", 1024, 768, 60, rl.ConfigFlags{.WINDOW_RESIZABLE}}
 
 	game := Game {
 		horizontal = true,
