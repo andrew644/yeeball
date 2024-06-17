@@ -29,24 +29,6 @@ worldIndex :: proc(world: ^World, x, y: i32) -> i32 {
 	return y * world.width + x
 }
 
-click :: proc(game: ^Game, world: ^World, x, y: i32) {
-	if world.blueExtender.active == false {
-		world.blueExtender.x = x
-		world.blueExtender.y = y
-		world.blueExtender.active = true
-		world.blueExtender.length = 16
-		world.blueExtender.horizontal = game.horizontal
-	}
-
-	if world.redExtender.active == false {
-		world.redExtender.x = x
-		world.redExtender.y = y
-		world.redExtender.active = true
-		world.redExtender.length = 16
-		world.redExtender.horizontal = game.horizontal
-	}
-}
-
 initWorld :: proc(game: ^Game, world: ^World) {
 	//Clear world
 	for i := 0; i < len(world.filled); i += 1 {

@@ -66,7 +66,8 @@ Extender :: struct {
 }
 
 main :: proc() {
-	window := Window{"Yeeball", 1024, 768, 60, rl.ConfigFlags{.WINDOW_RESIZABLE}}
+	window := Window{"Yeeball", 1024, 768, 60, rl.ConfigFlags{}}
+	rl.SetTraceLogLevel(.ERROR)
 
 	game := Game {
 		horizontal = true,
@@ -123,7 +124,11 @@ main :: proc() {
 
 		if left_mouse_clicked {
 			mousePos := rl.GetMousePosition()
-			click(&game, &world, i32(mousePos.x) - game.leftOffset, i32(mousePos.y) - game.topOffset)
+			x := i32(mousePos.x) - game.leftOffset
+			y := i32(mousePos.y) - game.topOffset
+			if isValidClick(&game, &world, x, y) {
+				click(&game, &world, x, y)
+			}
 		}
 
 		delta := rl.GetFrameTime()

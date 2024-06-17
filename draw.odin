@@ -20,10 +20,17 @@ drawOutline :: proc(game: ^Game, points: [dynamic]Point) {
 
 drawPercentFilled :: proc(game: ^Game, world: ^World) {
 	buffer: [4]byte
-	buffer[0] = '0'
-	buffer[1] = '0'
-	buffer[2] = '%'
-	buffer[3] = 0
+	if world.fillPercent < 10 {
+		buffer[0] = '0'
+		buffer[1] = '%'
+		buffer[2] = 0
+		buffer[3] = 0
+	} else {
+		buffer[0] = '0'
+		buffer[1] = '0'
+		buffer[2] = '%'
+		buffer[3] = 0
+	}
 
 	strconv.itoa(buffer[:], int(world.fillPercent))
 	rl.DrawText(cstring(raw_data(buffer[:])), game.leftOffset + world.border, 32, 32, rl.GREEN)
